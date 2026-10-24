@@ -4,7 +4,19 @@
 
 **[在线体验](https://liz2z.github.io/tuanzi/)** · [授权联系](https://github.com/Liz2Z/tuanzi/issues)
 
+[![团子 18 个形象总览，包含基础形象、磁流体家族与电光家族](assets/preview/collection.png)](https://liz2z.github.io/tuanzi/)
+
 18 个形象，包含基础形象、磁流体家族与电光家族。21 种表情，支持视线跟随、自然眨眼和自动演示；不同形象拥有各自的动作，辅助标志会随身体轮廓让位。
+
+## 表情与动作
+
+从睡眠、聆听和思考，到开心、害羞与生气。
+
+![浮云的 21 种表情与情绪姿态](assets/preview/expressions.png)
+
+同一种心情，各有各的动作。小角会蹦跳，磁流体会舒展，电光会收放。
+
+![小角、呼吸团子与球电团子的连续表情及动作演示](assets/preview/motion.gif)
 
 本地打开 [expressions-v3.html](expressions-v3.html) 即可预览最新版；[V2](expressions-v2.html) 与[初版眼神设计](index.html) 保留供对比。
 
