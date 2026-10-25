@@ -55,7 +55,7 @@ const states=[
  {id:'sleep',group:'日常',name:'睡眠',hint:'眼皮放松垂下，安静地呼吸',behavior:'两道柔软的闭眼弧，眼角下垂，身体慢慢收拢。',scale:.93,energy:.16,tilt:-.025,eyes:{l:[1.04,.075,-3,.16,2],r:[1.04,.075,3,.16,2],gaze:[0,1],blink:0}},
  {id:'wake',group:'日常',name:'唤醒',hint:'先轻轻转头，再试探着睁眼',behavior:'刚被叫醒时，头先轻轻转过来、抬起一点，眼睛跟着面部移动；随后试探着睁眼、回眯，再舒展开进入放空。',scale:.97,energy:.24,tilt:-.02,eyes:{l:[1.05,.20,-7,.015,1.5],r:[1.05,.24,-7,.015,.8],gaze:[-.3,1.2],blink:0}},
  {id:'idle',group:'日常',name:'放空',hint:'斜瞟右上方，悠闲地走神',behavior:'两只眼睛一起斜瞟右上方，眼形顺着视线倾斜，远侧那只稍细、稍高；目光停留片刻再轻轻游走，像吹着口哨发呆。',scale:1,energy:.24,tilt:0,eyes:{l:[1,1,-2,0,0],r:[1,.96,2,0,0],gaze:[0,0]}},
- {id:'listen',group:'日常',name:'聆听',hint:'双眼抬起、睁大，认真听你说',behavior:'两只眼睛向你抬起，眼形更饱满，目光稳定而专注。',scale:1.035,energy:.32,tilt:.035,eyes:{l:[1.02,1.18,-4,0,-1],r:[1.02,1.18,4,0,-1],gaze:[0,-2.4],blink:.5}},
+ {id:'listen',group:'日常',name:'聆听',hint:'专注看着你，时不时轻轻点头回应',behavior:'目光专注地看着你，间歇轻轻点头，偶尔再补一个更小的点头，表示正在听。',scale:1.035,energy:.32,tilt:.035,eyes:{l:[1.02,1.18,-4,0,-1],r:[1.02,1.18,4,0,-1],gaze:[0,-2.4],blink:.5}},
  {id:'think',group:'日常',name:'思考',hint:'一只眼轻眯，目光偏上，认真琢磨',behavior:'一只眼轻轻眯起，另一只略睁，目光移向斜上方，像在脑海里找答案。',scale:.99,energy:.54,tilt:-.02,eyes:{l:[.52,1.00,27,0,-.9,.18],r:[.56,1.12,-18,0,.7,-.18],gaze:[.6,-1.4],gap:.94,blink:.35}},
  {id:'busy',group:'日常',name:'忙碌',hint:'凝神的长眼形，快速点头、回弹',behavior:'上眼皮轻轻压下，目光稳住；身体用点头、回弹、叶片摆动或电弧脉冲表现忙碌。',scale:1.025,energy:.84,tilt:0,eyes:{l:[.51,1.10,-5,0,-.4,-.04],r:[.48,1.04,5,0,.4,.04],gaze:[0,.4],gap:.94,blink:.35}},
  {id:'speak',group:'日常',name:'说话',hint:'目光轻轻回应，眼皮随语气起伏',behavior:'双眼随模拟语气舒展、轻眯，目光保持交流感，身体轻轻回弹。',scale:1.015,energy:1.15,tilt:0,eyes:{l:[1.02,.94,-3,-.06,0],r:[1.02,.94,3,-.06,0],gaze:[0,-.4]}},
@@ -246,6 +246,19 @@ function colorEmotion(r,s){
  for(let i=0;i<4;i++)r.svg.style.setProperty('--surface-'+i,mixTint(tones[i],red[i],heat));
  r.svg.style.setProperty('--surface-rim',light?'#fffff3':'#c6d0bd');
 }
+// Short acknowledgments separated by quiet holds; each character has its own pace.
+function listeningNod(elapsed,model){
+ const p=BODY_CHARACTERS[model.id],pace=.94+(1.35-p.tempo)*.18;
+ const u=(elapsed/pace-p.seed*.13)%19.4;
+ if(u<0)return 0;
+ const ease=v=>{v=Math.max(0,Math.min(1,v));return v*v*v*(v*(v*6-15)+10)};
+ let dip=0;
+ for(const[start,strength]of[[1.5,1],[5.7,.88],[6.52,.50],[11.6,1],[16.3,.76]]){
+  const t=u-start;
+  if(t>=0&&t<.82)dip+=strength*(ease(t/.24)-ease((t-.34)/.48));
+ }
+ return dip;
+}
 function applyBodyMotion(r,t,dt,s){
  const p=BODY_CHARACTERS[r.model.id];
  r.motionClock=(r.motionClock??p.seed)+Math.min(.06,Math.max(0,dt))*Math.max(.1,s.mSpeed)*p.tempo;
@@ -277,10 +290,14 @@ function applyBodyMotion(r,t,dt,s){
   case 'burst':sx+=Math.pow(Math.max(0,Math.sin(q*3.5)),3)*act*.035;sy+=Math.pow(Math.max(0,Math.sin(q*3.5)),3)*act*.035;break;
   case 'segments':angle+=Math.sin(q*1.8)*(2+act*3);skew=Math.sin(q*1.2)*act*1.8;break;
  }
- const rest=1-.48*s.eIdle;
+ const rest=1-.48*s.eIdle-.36*s.listening;
  x=s.mX*p.travel+(x-s.mX*p.travel)*rest;
  y=s.mY*p.lift+(y-s.mY*p.lift)*rest;
  angle=s.mTilt*p.rock+(angle-s.mTilt*p.rock)*rest;
+ const nod=listeningNod(listenElapsed,r.model)*s.listening;
+ // Pitch the face with the body dip so a round body also reads as a nod.
+ y+=nod*(3.8+p.lift);angle+=nod*.7*p.rock;
+ sy-=nod*.022*p.stretch;sx+=nod*.008*p.squash;
  sx=1+(sx-1)*p.scale*deformationAmount;sy=1+(sy-1)*p.scale*deformationAmount;skew*=deformationAmount;
  r.root.setAttribute('transform',`translate(${x.toFixed(3)} ${y.toFixed(3)}) translate(120 ${p.pivot}) rotate(${angle.toFixed(3)}) skewX(${skew.toFixed(3)}) scale(${sx.toFixed(4)} ${sy.toFixed(4)}) translate(-120 ${-p.pivot})`);
  const ground=p.ground+Math.max(0,s.mY)*p.lift*.4;
@@ -372,7 +389,7 @@ const IDLE_ALIGNMENT=IDLE_OUTLINES.map(outline=>{
  neutral.forEach((p,i)=>{const d=(p[0]-outline[0][0])**2+(p[1]/1.4-outline[0][1])**2;if(d<distance){index=i;distance=d}});
  return index;
 });
-let wakeElapsed=0,wakeStartPose=null;
+let wakeElapsed=0,wakeStartPose=null,listenElapsed=0;
 const pointer={x:0,y:0,active:false};
 let transition=poseForState('idle');
 const neutralBodyPose=poseForState('idle');
@@ -620,6 +637,9 @@ function drawEyes(r,t,dt,s){
  r.faceProjection=surfaceFacePose(r,gx*gazeReach,gy*gazeReach,s.eIdle);
  if(r.faceProjection.solid)r.faceProjection.yaw+=s.eWakeYaw;
  else r.faceProjection.gx+=s.eWakeYaw*52;
+ const nod=listeningNod(listenElapsed,m)*s.listening;
+ if(r.faceProjection.solid)r.faceProjection.pitch+=nod*.18;
+ else r.faceProjection.gy+=nod*8;
  const classic=s.eClassicAngry,modernW=m.eyeType==='pill'?6.9:Math.max(8.1,Math.min(10.1,m.eye*1.37));
  const previousW=m.eyeType==='pill'?8.6:Math.max(9.8,Math.min(12,m.eye*1.65));
  const baseW=modernW+(previousW-modernW)*classic;
@@ -738,6 +758,7 @@ stateButtons($('#states'));stateButtons($('#detail-states'));
 for(let[i,m]of models.entries()){let card=document.createElement('article');card.className='card';let b=document.createElement('button');b.className='open-card';b.setAttribute('aria-label',`放大查看 ${m.name}`);b.innerHTML=`<div class="stage"><span class="number">${String(i+1).padStart(2,'0')} /</span><span class="expand" aria-hidden="true">↗</span></div><div class="copy"><div class="name-row"><h2>${m.name}</h2><span>${m.en}</span></div><p>${m.short}</p></div>`;renderers.push(createMascot(m,b.querySelector('.stage'),'card-'+i));b.addEventListener('click',()=>openModel(i));card.append(b);$(m.family==='ferro'?'#ferro-family':m.family==='electric'?'#electric-family':'#gallery').append(card);}
 function goal(){return state==='wake'?wakingPose(wakeElapsed):poseForState(state);}
 function setState(next){
+ if(next==='listen'&&state!=='listen')listenElapsed=0;
  if(next==='idle'&&state==='sleep')next='wake';
  if(next==='wake'){
   wakeStartPose={...transition};wakeElapsed=paused?.42*WAKE_PACE:0;
@@ -759,7 +780,7 @@ function paint(dt){
 function frame(now){
  const dt=last?Math.min(.06,(now-last)/1000):.016;last=now;
  if(!paused&&!document.hidden){
-  time+=dt;
+  time+=dt;if(state==='listen'||transition.listening>.001)listenElapsed+=dt;
   if(state==='wake'){
    wakeElapsed=Math.min(WAKE_DURATION,wakeElapsed+dt);Object.assign(transition,goal());
   }else{
