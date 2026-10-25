@@ -429,7 +429,7 @@ function drawBodyShape(r,t,s){
  else if(m.id==='circle'){const k=33.13708499;p=`M120 60 C${120+k} 60 180 ${120-k} 180 120 C180 ${120+k} ${120+k} 180 120 180 C${120-k} 180 60 ${120+k} 60 120 C60 ${120-k} ${120-k} 60 120 60 Z`;}
  else if(m.id==='corner'){
   // Equal sides and equal corner trims keep all three corners equally soft.
-  const vertices=[[120,52],[120+75*Math.sqrt(3)/2,164.5],[120-75*Math.sqrt(3)/2,164.5]],trim=14;
+  const vertices=[[120,52],[120+75*Math.sqrt(3)/2,164.5],[120-75*Math.sqrt(3)/2,164.5]],trim=28;
   const corners=vertices.map((v,i)=>{
    const point=t=>{const d=Math.hypot(t[0]-v[0],t[1]-v[1]);return[v[0]+(t[0]-v[0])*trim/d,v[1]+(t[1]-v[1])*trim/d]};
    return{entry:point(vertices[(i+2)%3]),tip:v,exit:point(vertices[(i+1)%3])};
