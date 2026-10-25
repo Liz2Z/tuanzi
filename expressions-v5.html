@@ -54,7 +54,7 @@ const models=[
 const states=[
  {id:'sleep',group:'日常',name:'睡眠',hint:'闭眼垂向左下，偶尔缓缓抬头转向右上',behavior:'闭着眼安静地垂向左下，偶尔缓缓抬头转向右上；两道细细的眼线随之移位、舒展，再慢慢放松回左下。',scale:.93,energy:.16,tilt:-.025,eyes:{l:[1.04,.075,-3,.16,2],r:[1.04,.075,3,.16,2],gaze:[0,1],blink:0}},
  {id:'wake',group:'日常',name:'唤醒',hint:'轻抬头，试探睁眼、回眯，再慢慢舒展',behavior:'头轻轻抬起，先试探着睁开一只眼睛，再一起回眯，像揉了揉困意；随后双眼慢慢舒展，放松进入放空。',scale:.97,energy:.24,tilt:-.02,eyes:{l:[1.05,.20,-7,.015,1.5],r:[1.05,.24,-7,.015,.8],gaze:[-.3,1.2],blink:0}},
- {id:'idle',group:'日常',name:'放空',hint:'斜瞟右上方，悠闲地走神',behavior:'两只眼睛一起斜瞟右上方，眼形顺着视线倾斜，远侧那只稍细、稍高；目光停留片刻再轻轻游走，像吹着口哨发呆。',scale:1,energy:.24,tilt:0,eyes:{l:[1,1,-2,0,0],r:[1,.96,2,0,0],gaze:[0,0]}},
+ {id:'idle',group:'日常',name:'放空',hint:'斜瞟右上，偶尔回正一点再望回去',behavior:'两只眼睛斜瞟右上，隔一会缓缓回正一点，停一下，再转回右上；远侧的眼睛随角度轻轻舒展，像悠闲地走神。',scale:1,energy:.24,tilt:0,eyes:{l:[1,1,-2,0,0],r:[1,.96,2,0,0],gaze:[0,0]}},
  {id:'listen',group:'日常',name:'聆听',hint:'专注看着你，时不时轻轻点头回应',behavior:'目光专注地看着你，间歇轻轻点头，偶尔再补一个更小的点头，表示正在听。',scale:1.035,energy:.32,tilt:.035,eyes:{l:[1.02,1.18,-4,0,-1],r:[1.02,1.18,4,0,-1],gaze:[0,-2.4],blink:.5}},
  {id:'think',group:'日常',name:'思考',hint:'一只眼轻眯，目光偏上，认真琢磨',behavior:'一只眼轻轻眯起，另一只略睁，目光移向斜上方，像在脑海里找答案。',scale:.99,energy:.54,tilt:-.02,eyes:{l:[.52,1.00,27,0,-.9,.18],r:[.56,1.12,-18,0,.7,-.18],gaze:[.6,-1.4],gap:.94,blink:.35}},
  {id:'busy',group:'日常',name:'忙碌',hint:'目光来回核对，短促动作后稍作停顿',behavior:'略微收起眼皮，目光在两侧与下方来回核对；身体配合短促的下压动作，处理一阵后抬眼检查。',scale:1.025,energy:.84,tilt:0,eyes:{l:[.51,1.10,-5,0,-.4,-.04],r:[.48,1.04,5,0,.4,.04],gaze:[0,.4],gap:.94,blink:.35}},
@@ -247,6 +247,10 @@ function colorEmotion(r,s){
  r.svg.style.setProperty('--surface-rim',light?'#fffff3':'#c6d0bd');
 }
 // Held poses, short accents and sentence gaps give each action a readable rhythm.
+const IDLE_GAZE_KEYS=[
+ [0,0,0,0],[4.8,0,0,0],[6.6,-3.6,3,1],[8.2,-3.6,3,1],
+ [10.2,0,0,0],[17.5,0,0,0]
+];
 const SLEEP_HEAD_KEYS=[
  [0,0,0,0],[5.8,0,0,0],[8.6,1,8.4,-5.8],[10.1,1,8.4,-5.8],
  [13.9,0,0,0],[21.5,0,0,0]
@@ -438,7 +442,7 @@ const IDLE_ALIGNMENT=IDLE_OUTLINES.map(outline=>{
  neutral.forEach((p,i)=>{const d=(p[0]-outline[0][0])**2+(p[1]/1.4-outline[0][1])**2;if(d<distance){index=i;distance=d}});
  return index;
 });
-let wakeElapsed=0,wakeStartPose=null,listenElapsed=0,busyElapsed=0,speakElapsed=0,sleepElapsed=0;
+let wakeElapsed=0,wakeStartPose=null,listenElapsed=0,busyElapsed=0,speakElapsed=0,sleepElapsed=0,idleElapsed=0;
 const pointer={x:0,y:0,active:false};
 // Destination-specific durations, with the same cubic ease-in/out as Grok Ball.
 const STATE_TRANSITIONS={sleep:.9,idle:.7,listen:.65,think:.65,busy:.6,speak:.65,
@@ -657,12 +661,8 @@ function blinkEnvelope(t,phase){
  return Math.max(blinkPulse(u-period+.62),cycle%4===2?.78*blinkPulse(u-period+.29):0);
 }
 function idleGaze(t){
- const keys=[[0,0,0],[2.8,0,0],[3.7,-.8,.12],[6.4,-.8,.12],[7.3,.6,-.1],[10.2,.6,-.1],[11.4,0,0],[13.8,0,0]],u=((t%13.8)+13.8)%13.8;
- for(let i=1;i<keys.length;i++)if(u<=keys[i][0]){
-  const a=keys[i-1],b=keys[i],k=(u-a[0])/(b[0]-a[0]),ease=k*k*(3-2*k);
-  return{x:a[1]+(b[1]-a[1])*ease,y:a[2]+(b[2]-a[2])*ease};
- }
- return{x:0,y:0};
+ const [x,y,front]=gestureKeys(t,IDLE_GAZE_KEYS);
+ return{x,y,front};
 }
 function fitFaceWithinBody(r,eyes){
  if(!r.solid||!eyes.length)return;
@@ -693,7 +693,7 @@ function drawEyes(r,t,dt,s){
  const smooth=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
  const glance=(smooth((u-3.6)/.22)-smooth((u-4.7)/.32))*(pointer.active?0:1)*quiet;
  const driftX=glance*Math.sin(cycle*2.4+r.phase)*1.35,driftY=glance*Math.cos(cycle*1.7+r.phase)*.45;
- const idleLook=idleGaze(q),attention=1-.68*s.eIdle-.32*s.eBusy-.22*s.speaking;
+ const idleLook=idleGaze(idleElapsed+BODY_CHARACTERS[m.id].seed*.18),attention=1-.68*s.eIdle-.32*s.eBusy-.22*s.speaking;
  const work=busyGesture(busyElapsed,m),speech=speakingGesture(speakElapsed,m);
  const gx=r.gaze[0]*(1-s.asleep)*.78*attention+s.eGazeX+driftX*(1-s.eIdle)+idleLook.x*s.eIdle+s.eNervous*Math.sin(q*3.1)*.23+work.x*s.eBusy+speech.turn*.8*s.speaking;
  const gy=r.gaze[1]*(1-s.asleep)*.72*attention+s.eGazeY+driftY*(1-s.eIdle)+idleLook.y*s.eIdle+(work.y-1.4)*s.eBusy-speech.energy*.5*s.speaking;
@@ -720,7 +720,7 @@ function drawEyes(r,t,dt,s){
   const micro=s.speaking*(speech.energy*.12+speech.beat*.09-speech.ending*.18)+s.eBusy*work.check*.14;
   const sleepCenter=r.faceProjection.solid?r.faceProjection.cy:120;
   const faceY=m.eyeY+(sleepCenter-m.eyeY)*s.asleep;
-  const at=projectFacePoint(r,120+sign*gap,faceY+s['e'+side+'Y']+s.eIdle*Math.sin(q*.37+sign*1.1)*.18);
+  const at=projectFacePoint(r,120+sign*gap,faceY+s['e'+side+'Y']+s.eIdle*(idleLook.front*(sign>0?1.7:.3)+Math.sin(q*.37+sign*1.1)*.18));
   const w=baseW*s['e'+side+'W']*(1-closure*.035)*(1+s.speaking*(speech.beat*.018+speech.ending*.025))*at.sx;
   const h=Math.max(1.12,baseH*(heightFactor+micro)*(1-closure)+1.12*closure)*at.sy;
   const curve=baseH*(s['e'+side+'Curve']-s.speaking*speech.ending*.07)*(1-closure)+.65*closure;
@@ -731,7 +731,7 @@ function drawEyes(r,t,dt,s){
    outline=source.map(([x,y],i)=>{const p=target[(i+offset)%48];return[p[0]+(x*w-p[0])*amount,p[1]+(y*h-p[1])*amount]});
   }
   if(s.eIdle>.0001){
-   const index=sign<0?0:1,source=IDLE_OUTLINES[index],target=resampleOutline(outline,48),offset=IDLE_ALIGNMENT[index],amount=s.eIdle;
+   const index=sign<0?0:1,source=IDLE_OUTLINES[index],target=resampleOutline(outline,48),offset=IDLE_ALIGNMENT[index],amount=s.eIdle*(1-idleLook.front*.22);
    outline=source.map(([x,y],i)=>{const p=target[(i+offset)%48];return[p[0]+(x*w-p[0])*amount,p[1]+(y*h-p[1])*amount]});
   }
   const angle=s['e'+side+'Tilt']+at.roll;
@@ -835,6 +835,7 @@ function advanceStateTransition(dt){
  if(t>=1)stateBlend=null;
 }
 function setState(next){
+ if(next==='idle'&&state!=='idle')idleElapsed=0;
  if(next==='wake')stateBlend=null;
  else if(next!==state)stateBlend={from:{...transition},elapsed:0,duration:STATE_TRANSITIONS[next]??.7};
  if(next==='sleep'&&state!=='sleep')sleepElapsed=0;
@@ -861,7 +862,8 @@ function paint(dt){
 function frame(now){
  const dt=last?Math.min(.06,(now-last)/1000):.016;last=now;
  if(!paused&&!document.hidden){
-  time+=dt;if(state==='sleep'||transition.asleep>.001)sleepElapsed+=dt;
+  time+=dt;if(state==='idle'||transition.eIdle>.001)idleElapsed+=dt;
+  if(state==='sleep'||transition.asleep>.001)sleepElapsed+=dt;
   if(state==='listen'||transition.listening>.001)listenElapsed+=dt;
   if(state==='busy'||transition.eBusy>.001)busyElapsed+=dt;
   if(state==='speak'||transition.speaking>.001)speakElapsed+=dt;
