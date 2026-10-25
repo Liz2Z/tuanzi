@@ -88,7 +88,7 @@ const EYE_DESIGN={
  focused:{l:[1.03,.75,7,0,0],r:[1.03,.75,-7,0,0],gaze:[0,-.4],lid:.34,lidSlope:.11,gap:.96,blink:.35},
  shy:{l:[.96,.56,-4,-.15,.6],r:[.96,.56,4,-.15,.6],gaze:[-3.4,2],lid:.09,gap:.98},
  sad:{l:[1,.64,-13,.08,1.4],r:[1,.64,13,.08,1.4],gaze:[0,2.3],lid:.15,lidSlope:-.15,blink:.55},
- angry:{l:[1.12,.23,24,.055,.3],r:[1.12,.23,-24,.055,.3],gaze:[0,-.6],gap:.93,blink:0},
+ angry:{l:[.43,1.00,-32,0,.5,-.23],r:[.36,1.11,18,0,-.5,.23],gaze:[0,-.9],gap:.86,blink:.20},
  sleepy:{l:[1.05,.65,-2,0,1.2],r:[1.05,.65,2,0,1.2],gaze:[0,1.5],lid:.40,blink:1.1},
  wink:{l:[.98,1,-2,0,0],r:[1.12,.12,4,-.4,.8],gaze:[1,-.5],blink:0},
  eager:{l:[1.04,1.17,-3,-.035,-.5],r:[1.04,1.17,3,-.035,-.5],gaze:[0,-2.5],lower:.07,blink:.3},
@@ -405,7 +405,7 @@ function drawElectric(r,t,s,pulse){
 function behaviorText(model,s){return deformationEnabled?s.behavior:`当前：${s.name}。身体轮廓与比例保持固定，眼神和整体动作继续变化。`;}
 function poseForState(id){
  const s=states.find(item=>item.id===id)||states.find(item=>item.id==='idle'),e=s.eyes;
- const out={open:1,scale:s.scale,energy:s.energy,tilt:s.tilt,happy:id==='happy'?1:0,asleep:id==='sleep'?1:0,thinking:id==='think'?1:0,speaking:id==='speak'?1:0,listening:id==='listen'?1:0,eGazeX:e.gaze[0],eGazeY:e.gaze[1],eGap:e.gap||1,eBlink:e.blink??1,eNervous:id==='nervous'?1:0,eSleepy:id==='sleepy'?1:0,eBusy:id==='busy'?1:0};
+ const out={open:1,scale:s.scale,energy:s.energy,tilt:s.tilt,happy:id==='happy'?1:0,asleep:id==='sleep'?1:0,thinking:id==='think'?1:0,speaking:id==='speak'?1:0,listening:id==='listen'?1:0,eGazeX:e.gaze[0],eGazeY:e.gaze[1],eGap:e.gap||1,eBlink:e.blink??1,eClassicAngry:id==='angry'?1:0,eNervous:id==='nervous'?1:0,eSleepy:id==='sleepy'?1:0,eBusy:id==='busy'?1:0};
  for(const side of ['l','r'])for(const [i,key]of ['W','H','Tilt','Curve','Y','Bend'].entries())out['e'+side+key]=e[side][i]??0;
  for(const side of['l','r']){const suffix=side.toUpperCase();out['e'+side+'Lid']=e['lid'+suffix]??e.lid??0;out['e'+side+'Lower']=e.lower??0;out['e'+side+'LidSlope']=e.lidSlope??0;}
  const motion=BODY_EMOTIONS[id]||{};for(const[key,value]of Object.entries(BODY_DEFAULTS))out['m'+key]=motion[key]??value;
@@ -419,7 +419,15 @@ function updateGazeTargets(){
  }
 }
 // Shared contours, individual expression: clean capsules, eyelids and soft smile arcs.
-function eyeContour(w,h,curve,lid,lower,slope){
+function eyeContour(w,h,curve,lid,lower,slope,bend=0,classic=0){
+ if(classic>=.999){
+  const points=[];
+  for(let i=0;i<20;i++){
+   const a=i/20*Math.PI*2,c=Math.cos(a),sn=Math.sin(a),u=Math.sign(c)*Math.pow(Math.abs(c),.83),v=Math.sign(sn)*Math.pow(Math.abs(sn),.88);
+   points.push([u*w+bend*(1-v*v),v*h+curve*(1-u*u)]);
+  }
+  return smoothPath(points);
+ }
  const radius=Math.min(w,h)*.98,raw=[],points=[],corners=[[w-radius,-h+radius,-Math.PI/2],[w-radius,h-radius,0],[-w+radius,h-radius,Math.PI/2],[-w+radius,-h+radius,Math.PI]];
  for(let k=0;k<corners.length;k++){
   const[cx,cy,start]=corners[k];
@@ -427,10 +435,14 @@ function eyeContour(w,h,curve,lid,lower,slope){
   const last=raw.at(-1),[nx,ny,na]=corners[(k+1)%4],end=[nx+radius*Math.cos(na),ny+radius*Math.sin(na)];
   for(let i=1;i<5;i++)raw.push([last[0]+(end[0]-last[0])*i/5,last[1]+(end[1]-last[1])*i/5]);
  }
- for(const[x,sourceY]of raw){
+ for(let[x,sourceY]of raw){
+  // Blend into the previous curved, slender eye shape during anger transitions.
+  const a=Math.atan2(sourceY/h,x/w),c=Math.cos(a),sn=Math.sin(a);
+  x+=(w*Math.sign(c)*Math.pow(Math.abs(c),.83)-x)*classic;
+  sourceY+=(h*Math.sign(sn)*Math.pow(Math.abs(sn),.88)-sourceY)*classic;
   const upper=-h+h*1.75*lid+x*slope,bottom=h-h*1.65*lower;
   const y=Math.max(upper,Math.min(bottom,sourceY))+curve*(1-(x/w)**2);
-  if(!points.length||Math.hypot(x-points.at(-1)[0],y-points.at(-1)[1])>.025)points.push([x,y]);
+  if(!points.length||Math.hypot(x-points.at(-1)[0],y-points.at(-1)[1])>.025)points.push([x+bend*(1-(sourceY/h)**2),y]);
  }
  if(Math.hypot(points[0][0]-points.at(-1)[0],points[0][1]-points.at(-1)[1])<.025)points.pop();
  return smoothPath(points);
@@ -453,8 +465,12 @@ function drawEyes(r,t,dt,s){
  // The star's recessed sides leave less room for the face to turn.
  const gazeReach=m.id==='star'?.68:1;
  r.faceProjection=surfaceFacePose(r,gx*gazeReach,gy*gazeReach);
- const baseW=m.eyeType==='pill'?6.9:Math.max(8.1,Math.min(10.1,m.eye*1.37));
- const baseH=m.eyeType==='pill'?15:Math.min(14.5,baseW*(m.id==='wisp'?1.47:1.40));
+ const classic=s.eClassicAngry,modernW=m.eyeType==='pill'?6.9:Math.max(8.1,Math.min(10.1,m.eye*1.37));
+ const previousW=m.eyeType==='pill'?8.6:Math.max(9.8,Math.min(12,m.eye*1.65));
+ const baseW=modernW+(previousW-modernW)*classic;
+ const modernH=m.eyeType==='pill'?15:Math.min(14.5,modernW*(m.id==='wisp'?1.47:1.40));
+ const previousH=m.eyeType==='pill'?15.3:Math.min(16.5,previousW*(m.id==='wisp'?1.36:1.23));
+ const baseH=modernH+(previousH-modernH)*classic;
  const gap=m.gap*s.eGap+(m.id==='echo'||m.id==='resonance'?1.7:0);
  const color=(m.electric||m.id==='echo'||m.id==='resonance')?'var(--body)':'var(--face)';
  for(const[eye,side,sign]of[[r.left,'l',-1],[r.right,'r',1]]){
@@ -465,7 +481,7 @@ function drawEyes(r,t,dt,s){
   const h=Math.max(1.12,baseH*(heightFactor+micro)*(1-closure)+1.12*closure)*at.sy;
   const curve=baseH*s['e'+side+'Curve']*(1-closure)+.65*closure;
   const lid=s['e'+side+'Lid']*(1-closure),lower=s['e'+side+'Lower']*(1-closure);
-  eye.setAttribute('d',eyeContour(w,h,curve,lid,lower,s['e'+side+'LidSlope']*sign*(1-closure)));
+  eye.setAttribute('d',eyeContour(w,h,curve,lid,lower,s['e'+side+'LidSlope']*sign*(1-closure),baseW*s['e'+side+'Bend']*at.sx*classic,classic));
   eye.setAttribute('fill',color);eye.setAttribute('stroke','none');
   eye.setAttribute('transform',`translate(${at.x.toFixed(3)} ${at.y.toFixed(3)}) rotate(${(s['e'+side+'Tilt']+at.roll).toFixed(3)})`);
  }
