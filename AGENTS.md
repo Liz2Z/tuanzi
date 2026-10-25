@@ -11,6 +11,7 @@
 ## 项目与版本
 
 - 品牌名为 **团子 / TUANZI**。项目提供形象、表情、SVG 动画和可独立打开的网页预览。
+- 主标题上方的英文统一使用 **LITTLE LIVES**，后接对应版本号；首页与 V2～V5 均保持这一文案。
 - 当前迭代文件为 `expressions-v5.html`。连续微调和修复在本版进行；要求新方案、新版本时另建版本。
 - 首页 `index.html` 与当前 V5 保持同步；V1、V2、V3、V4 保留供比较，初版另存为 `expressions-v1.html`。发布 V5 时同步首页，不覆盖旧版。
 - 源码：<https://github.com/Liz2Z/tuanzi>。
