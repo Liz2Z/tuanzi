@@ -21,7 +21,7 @@
 <header class="mast"><div class="wordmark"><span class="logo" aria-hidden="true"><i></i><i></i></span>团子 <span class="edition">/ TUANZI</span></div><div class="top-actions"><a class="version-link" href="expressions-v3.html">上一版</a><button id="autoplay" aria-pressed="false">自动演示</button><button id="pause" aria-pressed="false">暂停动画</button><button id="theme" aria-pressed="false">深色背景</button></div></header>
 <section class="intro"><div><p class="eyebrow">SOFT LIGHT & GAZE / V4</p><h1>一小团，<span>有自己的脾气。</span></h1></div><p>每一只团子，都有自己的性格。<br>柔和的光，贴近你的目光。</p></section>
 <div class="toolbar"><div class="states" id="states" role="group" aria-label="所有形象的演示状态"></div><div class="hint"><i class="dot" aria-hidden="true"></i><span id="state-hint">轻轻呼吸，偶尔眨眼</span></div></div>
-<main class="grid" id="gallery" aria-label="九种基础形象"></main>
+<main class="grid" id="gallery" aria-label="十种基础形象"></main>
 <section class="family-section" id="ferro-family-section" aria-labelledby="family-title"><div class="family-heading"><div><p class="eyebrow">FERROFLUID FAMILY / 05</p><h2 id="family-title">磁流体家族</h2></div><p>都是团子，只是流动的性格不同。<br>缓流、张力、涟漪、呼吸、柔流，五个小伙伴。</p></div><div class="grid family-grid" id="ferro-family" aria-label="五种磁流体团子"></div></section>
 <section class="family-section" id="electric-family-section" aria-labelledby="electric-family-title"><div class="family-heading"><div><p class="eyebrow">ELECTRIC FAMILY / 04</p><h2 id="electric-family-title">电光家族</h2></div><p>同样是团子，只是身体由电弧组成。<br>单环、三环、球电、断环，用眼神和电流表达情绪。</p></div><div class="grid electric-grid" id="electric-family" aria-label="四种电光团子"></div></section>
 <footer class="bottom"><p class="note">每一种心情，都有自己的小动作。</p><p>团子 / 小小生命</p><p>© 2026 团子 / TUANZI · 团子 TUANZI · <a href="LICENSE">保留所有权利 · 使用须先联系授权</a></p></footer></div>
@@ -32,6 +32,7 @@
 const NS='http://www.w3.org/2000/svg',$=s=>document.querySelector(s);
 const models=[
  {id:'corner',name:'小角',en:'Pebble',tag:'极简 / 安静',short:'圆钝的小三角，像一颗温热的石子。',concept:'延续 04 的三角与两点眼睛，把尖端揉圆、身体压低。轮廓足够简单，安静时也有自己的重心。',gap:16,eyeY:133,eye:5.8},
+ {id:'circle',name:'小圆',en:'Orb',tag:'圆润 / 纯粹',short:'圆圆的一小团，慢慢呼吸，轻轻弹起。',concept:'最纯粹的圆形身体，承着柔和的明暗；两只眼睛顺着圆面看向你。开心时轻轻弹起，害羞时缩成小小一团，安静时缓缓呼吸。',gap:16,eyeY:124,eye:6.8,motionPhase:.24},
  {id:'ink',name:'墨滴',en:'Inkling',tag:'液态 / 好奇',short:'一滴不肯定形的墨，顶端总慢半拍。',concept:'沿着 14 的流动感，把四散的鼓包收成一滴墨。顶端带一点侧偏，身体动完以后，尖端才轻轻跟上。',gap:15,eyeY:134,eye:6.3},
  {id:'cloud',name:'浮云',en:'Puff',tag:'柔软 / 亲近',short:'几团气抱在一起，呼吸时向外舒展。',concept:'取 09 的软气团，保留清楚的整体轮廓。用柔和明暗表现蓬松的体积，轮廓保持清晰；眼睛沿身体表面轻轻转动。',gap:16,eyeY:124,eye:5.6},
  {id:'star',name:'软星',en:'Mochi Star',tag:'活泼 / 有弹性',short:'五个软角轮流舒展，有一点小脾气。',concept:'一颗被揉软的星星。角尖不是刺，而是圆圆的小触角；它们各自迟一点点，让思考和说话都有弹性。',gap:16,eyeY:125,eye:6},
@@ -98,6 +99,7 @@ const BODY_EMOTIONS={
  relieved:{ScaleX:1.09,ScaleY:.91,Y:5,Tilt:5,Speed:.55,Bob:2.5,Rock:2,Breathe:.045,Sigh:.55}
 };
 const BODY_CHARACTERS={
+ circle:{kind:'bubble',pivot:178,tempo:.98,bob:.45,sway:.45,rock:.78,hop:1.08,squash:1.12,stretch:1.03,travel:.75,lift:1,scale:.92,seed:.24,ground:194},
  corner:{kind:'rock',pivot:168,tempo:1.12,bob:.18,sway:.35,rock:1.18,hop:1.05,squash:.65,stretch:.7,travel:.8,lift:1,scale:1,seed:0,ground:180},
  ink:{kind:'drop',pivot:174,tempo:.94,bob:.42,sway:.7,rock:.68,hop:.92,squash:1.35,stretch:1.15,travel:1,lift:1,scale:1,seed:.4,ground:186},
  cloud:{kind:'float',pivot:120,tempo:.77,bob:1.7,sway:1.6,rock:.6,hop:.62,squash:.6,stretch:.7,travel:1,lift:.8,scale:.85,seed:1.1,ground:199},
@@ -227,6 +229,7 @@ function applyBodyMotion(r,t,dt,s){
  const act=Math.min(1,s.mHop/12+s.mWork*.55+s.mHeat*.6+s.speaking*.6);
  switch(p.kind){
   case 'rock':angle+=Math.sin(q*1.5)*act*4.5;break;
+  case 'bubble':angle+=Math.sin(q*1.05)*(1.1+act*4);sx+=Math.sin(q*2.15)*act*.025;sy-=Math.sin(q*2.15)*act*.025;break;
   case 'drop':sy+=Math.sin(q*2.15-.38)*act*.075;sx-=Math.sin(q*2.15-.38)*act*.035;skew=Math.sin(q*1.5)*act*2.5;break;
   case 'float':x+=Math.cos(q*.85)*3.8;y+=Math.sin(q*.67)*3.5;sx+=Math.sin(q*1.1)*(.018+act*.035);break;
   case 'spring':angle+=Math.sin(q*1.8)*act*8;sy+=Math.sin(q*2.15)*act*.035;break;
@@ -417,6 +420,7 @@ function draw(r,t,dt,pose=transition){
  let scale=s.scale+breath*.012+pulse*.018,sy=1+breath*.018-pulse*.05,sx=1+pulse*.04;if(m.id==='wisp')bob+=Math.sin(q*.7)*3;if(m.id==='pillow'){bob*=.2;sy+=s.asleep*.02*Math.sin(q);}
  let p='';r.extra.setAttribute('d','');r.leaf1.setAttribute('d','');r.leaf2.setAttribute('d','');r.ring.setAttribute('d','');r.main.removeAttribute('filter');
  if(m.electric){p=drawElectric(r,t,s,pulse);}
+ else if(m.id==='circle'){const k=33.13708499;p=`M120 60 C${120+k} 60 180 ${120-k} 180 120 C180 ${120+k} ${120+k} 180 120 180 C${120-k} 180 60 ${120+k} 60 120 C60 ${120-k} ${120-k} 60 120 60 Z`;}
  else if(m.id==='corner'){let top=58+Math.sin(q*.8)*E*3;p=`M112 ${top+6} C116 ${top-2} 124 ${top-2} 128 ${top+6} L164 143 C173 162 169 170 149 170 L91 170 C71 170 67 162 76 143 Z`;}
  else if(m.id==='ink'){let tip=Math.sin((r.motionClock??q)*1.4)*E*13+s.mBlush*5-s.mHeat*3;p=smoothPath([[131+tip,41],[136+tip*.4,66],[155,88],[173,119],[169,149],[147,170],[111,177],[80,165],[67,139],[72,109],[92,85],[113,65]]);}
  else if(m.id==='cloud'){let puff=Math.sin((r.motionClock??q)*1.3)*(3+E*5+s.mHop*.12);p=`M80 158 C60 162 48 147 52 130 C37 113 48 93 67 93 C61 ${72+puff} 79 ${59+puff} 97 66 C111 ${50-puff} 137 ${54-puff} 146 74 C168 71 183 89 176 109 C193 127 181 150 161 149 C150 ${170+puff} 126 177 107 163 C95 172 83 170 80 158 Z`;}
