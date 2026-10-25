@@ -15,6 +15,8 @@
 
 :root{--studio-light:#fbfaf5;--studio-mid:#f2f1eb;--studio-edge:#e6e8e0}body.dark{--studio-light:#232b28;--studio-mid:#181f1d;--studio-edge:#111714}
 .stage,.big-stage{background:radial-gradient(ellipse at 37% 24%,var(--studio-light),var(--studio-mid) 59%,var(--studio-edge))}.big-stage.round{background:radial-gradient(ellipse at 35% 23%,#1b2420,#0b120f 70%,#080e0b)}
+
+.big-stage>svg{transform:scale(1.3);transform-origin:center}.big-stage.round>svg{transform:scale(1.2)}@media(max-width:620px){.big-stage:not(.round)>svg{transform:scale(1.25)}}
 </style>
 </head>
 <body><div class="wrap">
