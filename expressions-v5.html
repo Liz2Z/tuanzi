@@ -52,8 +52,8 @@ const models=[
  {id:'spark-broken',name:'断环团子',en:'Broken Puff',family:'electric',tag:'电光家族 / 调皮',short:'三处小缺口在身边游走，眼睛安稳地待在中间。',concept:'三处小缺口沿着电弧缓慢游走，两只眼睛安稳地留在中央。困了就闭眼，认真听时睁大，开心时弯起来。',gap:17,eyeY:125,eye:7.4,electric:{rings:1,r:60,jag:9,seg:44,breaks:3}}
 ];
 const states=[
- {id:'sleep',group:'日常',name:'睡眠',hint:'闭眼偏向左下，缓慢呼吸，偶尔轻轻挪头',behavior:'两道细细的闭眼线落在脸部左下方，头微垂，安静地呼吸；偶尔换一点角度，再慢慢放松回去。',scale:.93,energy:.16,tilt:-.025,eyes:{l:[1.04,.075,-3,.16,2],r:[1.04,.075,3,.16,2],gaze:[0,1],blink:0}},
- {id:'wake',group:'日常',name:'唤醒',hint:'先轻轻转头，再试探着睁眼',behavior:'刚被叫醒时，头先轻轻转过来、抬起一点，眼睛跟着面部移动；随后试探着睁眼、回眯，再舒展开进入放空。',scale:.97,energy:.24,tilt:-.02,eyes:{l:[1.05,.20,-7,.015,1.5],r:[1.05,.24,-7,.015,.8],gaze:[-.3,1.2],blink:0}},
+ {id:'sleep',group:'日常',name:'睡眠',hint:'闭眼垂向左下，偶尔缓缓抬头转向右上',behavior:'闭着眼安静地垂向左下，偶尔缓缓抬头转向右上；两道细细的眼线随之移位、舒展，再慢慢放松回左下。',scale:.93,energy:.16,tilt:-.025,eyes:{l:[1.04,.075,-3,.16,2],r:[1.04,.075,3,.16,2],gaze:[0,1],blink:0}},
+ {id:'wake',group:'日常',name:'唤醒',hint:'轻抬头，试探睁眼、回眯，再慢慢舒展',behavior:'头轻轻抬起，先试探着睁开一只眼睛，再一起回眯，像揉了揉困意；随后双眼慢慢舒展，放松进入放空。',scale:.97,energy:.24,tilt:-.02,eyes:{l:[1.05,.20,-7,.015,1.5],r:[1.05,.24,-7,.015,.8],gaze:[-.3,1.2],blink:0}},
  {id:'idle',group:'日常',name:'放空',hint:'斜瞟右上方，悠闲地走神',behavior:'两只眼睛一起斜瞟右上方，眼形顺着视线倾斜，远侧那只稍细、稍高；目光停留片刻再轻轻游走，像吹着口哨发呆。',scale:1,energy:.24,tilt:0,eyes:{l:[1,1,-2,0,0],r:[1,.96,2,0,0],gaze:[0,0]}},
  {id:'listen',group:'日常',name:'聆听',hint:'专注看着你，时不时轻轻点头回应',behavior:'目光专注地看着你，间歇轻轻点头，偶尔再补一个更小的点头，表示正在听。',scale:1.035,energy:.32,tilt:.035,eyes:{l:[1.02,1.18,-4,0,-1],r:[1.02,1.18,4,0,-1],gaze:[0,-2.4],blink:.5}},
  {id:'think',group:'日常',name:'思考',hint:'一只眼轻眯，目光偏上，认真琢磨',behavior:'一只眼轻轻眯起，另一只略睁，目光移向斜上方，像在脑海里找答案。',scale:.99,energy:.54,tilt:-.02,eyes:{l:[.52,1.00,27,0,-.9,.18],r:[.56,1.12,-18,0,.7,-.18],gaze:[.6,-1.4],gap:.94,blink:.35}},
@@ -76,7 +76,7 @@ const states=[
  {id:'relieved',group:'小情绪',name:'安心',hint:'轻轻眯眼，像终于松了一口气',behavior:'双眼放松成柔软的笑弧，幅度比开心更轻，安静地靠近你。',scale:1,energy:.23,tilt:.025,eyes:{l:[1.10,.16,-3,-.34,1],r:[1.10,.16,3,-.34,1],gaze:[0,.7],blink:0}}
 ];
 const EYE_DESIGN={
- wake:{l:[1.22,.44,0,0,2.2],r:[1.30,.50,0,0,-1.8],gaze:[0,0],blink:0},
+ wake:{l:[1.22,.44,0,0,8.5],r:[1.30,.50,0,0,1.3],gaze:[-3.2,1],blink:0},
  sleep:{l:[.98,.065,8,.035,6],r:[1.10,.065,8,.035,2],gaze:[-8,4.5],blink:0},
  idle:{l:[1.08,.98,0,0,-1],r:[.94,1,0,0,-5],gaze:[8.6,-9.5],gap:1.03,blink:1},
  listen:{l:[1,1.13,-2,0,-.8],r:[1,1.13,2,0,-.8],gaze:[0,-1.6],blink:.45},
@@ -248,8 +248,8 @@ function colorEmotion(r,s){
 }
 // Held poses, short accents and sentence gaps give each action a readable rhythm.
 const SLEEP_HEAD_KEYS=[
- [0,0,0,0],[5.8,0,0,0],[6.9,-.075,-2,1.4],[8.1,-.075,-2,1.4],
- [10.4,.03,.7,-.5],[11.8,0,0,0],[19.5,0,0,0]
+ [0,0,0,0],[5.8,0,0,0],[8.6,1,8.4,-5.8],[10.1,1,8.4,-5.8],
+ [13.9,0,0,0],[21.5,0,0,0]
 ];
 const BUSY_GESTURE_KEYS=[
  [0,-2.4,1.5,0,0],[.7,-2.4,1.5,0,0],[1.12,2.2,1,0,0],
@@ -274,10 +274,9 @@ function gestureKeys(t,keys){
  }
  return keys[0].slice(1);
 }
-function sleepingHead(elapsed,model){
- const p=BODY_CHARACTERS[model.id],pace=.98+(1.35-p.tempo)*.25;
- const [yaw,roll,lift]=gestureKeys(elapsed/pace,SLEEP_HEAD_KEYS);
- return{yaw,roll,lift};
+function sleepingHead(elapsed){
+ const [turn,roll,lift]=gestureKeys(elapsed/1.08,SLEEP_HEAD_KEYS);
+ return{turn,yaw:turn*.035,roll,lift};
 }
 function busyGesture(elapsed,model){
  const p=BODY_CHARACTERS[model.id],pace=.96+(1.35-p.tempo)*.18;
@@ -343,8 +342,6 @@ function applyBodyMotion(r,t,dt,s){
  // Pitch the face with the body dip so a round body also reads as a nod.
  y+=nod*(3.8+p.lift);angle+=nod*.7*p.rock;
  sy-=nod*.022*p.stretch;sx+=nod*.008*p.squash;
- const head=sleepingHead(sleepElapsed,r.model);
- x+=s.asleep*head.yaw*18*p.travel;y+=s.asleep*head.lift*p.lift;angle+=s.asleep*head.roll*p.rock;
  const work=busyGesture(busyElapsed,r.model),speech=speakingGesture(speakElapsed,r.model);
  x+=s.eBusy*work.x*.65*p.travel+s.speaking*speech.turn*2*p.travel;
  y+=s.eBusy*(work.tap*3.3-work.check*1.4)*p.lift-s.speaking*(speech.energy*2.7+speech.beat*2)*p.lift;
@@ -424,10 +421,9 @@ const WAKE_OUTLINES=[[[0.71582,-1.0],[0.81121,-0.96076],[0.89547,-0.83215],[0.95
 const IDLE_OUTLINES=[[[-0.3856,-1.0],[-0.23582,-0.98999],[-0.09114,-0.96043],[0.04461,-0.9118],[0.16316,-0.84267],[0.25876,-0.75638],[0.33588,-0.65959],[0.4028,-0.559],[0.46845,-0.45745],[0.53346,-0.3559],[0.59783,-0.25435],[0.66157,-0.15232],[0.72339,-0.04982],[0.78394,0.05316],[0.84257,0.15709],[0.8993,0.26103],[0.95347,0.36591],[0.99299,0.47461],[1.0,0.58665],[0.97068,0.69678],[0.90376,0.79738],[0.80497,0.88176],[0.68133,0.94517],[0.54111,0.98522],[0.39197,1.0],[0.24283,0.98951],[0.10006,0.95518],[-0.03059,0.8994],[-0.14277,0.82408],[-0.23136,0.73349],[-0.30083,0.63385],[-0.35946,0.53039],[-0.41683,0.42598],[-0.4761,0.32253],[-0.53601,0.21955],[-0.59783,0.11657],[-0.66029,0.01454],[-0.72403,-0.08749],[-0.78904,-0.18903],[-0.85915,-0.28868],[-0.9267,-0.38927],[-0.98024,-0.49416],[-1.0,-0.60524],[-0.97578,-0.71633],[-0.90886,-0.81645],[-0.80688,-0.89893],[-0.67878,-0.95662],[-0.53537,-0.98999]],[[-0.639,-1.0],[-0.48195,-0.97512],[-0.33457,-0.93171],[-0.19911,-0.87463],[-0.07406,-0.80732],[0.03833,-0.73122],[0.13658,-0.64732],[0.22367,-0.55805],[0.30257,-0.46585],[0.37774,-0.37171],[0.45143,-0.27756],[0.52363,-0.18244],[0.59285,-0.08683],[0.6591,0.00976],[0.72386,0.10683],[0.78489,0.20488],[0.84369,0.30341],[0.89877,0.40293],[0.95087,0.50341],[0.98809,0.60634],[1.0,0.7122],[0.98288,0.81707],[0.92185,0.91463],[0.80052,0.98244],[0.64272,1.0],[0.48493,0.97902],[0.33978,0.9322],[0.21102,0.86829],[0.09937,0.7922],[0.00633,0.70585],[-0.07034,0.6122],[-0.13361,0.51512],[-0.19092,0.4161],[-0.24749,0.31659],[-0.30703,0.21805],[-0.36807,0.12],[-0.43208,0.02293],[-0.49907,-0.07366],[-0.56755,-0.16976],[-0.639,-0.26488],[-0.71269,-0.35902],[-0.78936,-0.4522],[-0.86825,-0.54488],[-0.94194,-0.63902],[-0.99256,-0.73951],[-1.0,-0.84488],[-0.93599,-0.94049],[-0.79978,-0.99463]]];
 const WAKE_HEAD_FRAMES=[
  {at:0,yaw:0,roll:0,x:0,lift:0},
- {at:.22,yaw:.11,roll:2,x:1.2,lift:-.5},
- {at:.46,yaw:.24,roll:3.6,x:2.8,lift:-1.4},
- {at:.68,yaw:.19,roll:1.9,x:1.8,lift:-.8},
- {at:1.12,yaw:0,roll:0,x:0,lift:0}
+ {at:.24,yaw:.045,roll:1.2,x:.5,lift:-.8},
+ {at:.65,yaw:.075,roll:1.3,x:1,lift:-1},
+ {at:1.25,yaw:0,roll:0,x:0,lift:0}
 ];
 const WAKE_PACE=1.65,WAKE_HANDOFF=2.1*WAKE_PACE,WAKE_DURATION=2.8*WAKE_PACE;
 const WAKE_ALIGNMENT=WAKE_OUTLINES.map(outline=>{
@@ -545,6 +541,16 @@ function poseForState(id){
  const motion=BODY_EMOTIONS[id]||{};for(const[key,value]of Object.entries(BODY_DEFAULTS))out['m'+key]=motion[key]??value;
  return out;
 }
+// Keep the complete sleeping pose in state so any transition starts where it is drawn.
+function sleepingPose(elapsed){
+ const pose=poseForState('sleep'),head=sleepingHead(elapsed),u=head.turn;
+ pose.eGazeX+=u*16;pose.eGazeY-=u*8;
+ pose.elY-=u*9;pose.erY+=u;
+ pose.elW*=1+u*.12;pose.erW*=1-u*.12;
+ for(const side of['l','r']){pose['e'+side+'H']+=u*.025;pose['e'+side+'Curve']-=u*.09;pose['e'+side+'Tilt']-=u*9;}
+ pose.mX+=head.yaw*18;pose.mY+=head.lift;pose.mTilt+=head.roll;
+ return pose;
+}
 function mixWakePose(from,to,progress){
  const u=Math.max(0,Math.min(1,progress)),ease=u*u*u*(u*(u*6-15)+10),out={};
  for(const key of Object.keys(to))out[key]=from[key]+(to[key]-from[key])*ease;
@@ -583,11 +589,11 @@ function wakingPose(elapsed){
  }
  for(const key of['Heat','Blush','Steam','Spark','Tear','Question','Exclaim','Sweat','Sigh','Idea','Work','Droop','Hop','Shake','Squash'])pose['m'+key]=0;
  pose.eIdle=0;pose.eNervous=0;pose.eBusy=0;pose.eSleepy=0;
- pose.eGazeX=0;pose.eGazeY=0;pose.eGap=1;pose.eWakeShape=1;pose.eClassicAngry=0;
+ pose.eGazeX=wake.eGazeX;pose.eGazeY=wake.eGazeY;pose.eGap=1;pose.eWakeShape=1;pose.eClassicAngry=0;
  // Blend in from the actual current pose and hand off to idle without a contour snap.
  if(local<.32)pose=mixWakePose(from,pose,local/.32);
  const head=wakeHeadPose(elapsed);
- pose.mTilt=mixWakePose(from,idle,elapsed/.9).mTilt+head.roll;
+ pose.mTilt=mixWakePose(from,idle,elapsed/1.1).mTilt+head.roll;
  pose.mX+=head.x;pose.mY+=head.lift;pose.eWakeYaw=head.yaw;
  if(elapsed>=WAKE_HANDOFF)pose=mixWakePose(pose,idle,(elapsed-WAKE_HANDOFF)/(WAKE_DURATION-WAKE_HANDOFF));
  pose.eBlink=0;
@@ -653,7 +659,7 @@ function idleGaze(t){
  }
  return{x:0,y:0};
 }
-function fitIdleFace(r,eyes){
+function fitFaceWithinBody(r,eyes){
  if(!r.solid||!eyes.length)return;
  const samples=eyes.flatMap(({at,outline,angle})=>{
   const sin=Math.sin(angle*Math.PI/180),cos=Math.cos(angle*Math.PI/180);
@@ -689,7 +695,7 @@ function drawEyes(r,t,dt,s){
  // The star's recessed sides leave less room for the face to turn.
  const gazeReach=m.id==='star'?.68:1;
  r.faceProjection=surfaceFacePose(r,gx*gazeReach,gy*gazeReach,s.eIdle);
- const head=sleepingHead(sleepElapsed,m),headYaw=s.eWakeYaw+head.yaw*s.asleep;
+ const headYaw=s.eWakeYaw;
  if(r.faceProjection.solid)r.faceProjection.yaw+=headYaw;
  else{r.faceProjection.gx=r.faceProjection.gx*(1+s.asleep*1.5)+headYaw*52;r.faceProjection.gy*=1+s.asleep*.5;}
  const nod=listeningNod(listenElapsed,m)*s.listening;
@@ -702,7 +708,8 @@ function drawEyes(r,t,dt,s){
  const previousH=m.eyeType==='pill'?15.3:Math.min(16.5,previousW*(m.id==='wisp'?1.36:1.23));
  const baseH=modernH+(previousH-modernH)*classic;
  const gap=m.gap*s.eGap+(m.id==='echo'||m.id==='resonance'?1.7:0);
- const color=(m.electric||m.id==='echo'||m.id==='resonance')?'var(--body)':'var(--face)',idleEyes=[];
+ const color=(m.electric||m.id==='echo'||m.id==='resonance')?'var(--body)':'var(--face)',fittedEyes=[];
+ const fitFace=s.eIdle>.001||s.asleep>.001||s.eWakeShape>.001;
  for(const[eye,side,sign]of[[r.left,'l',-1],[r.right,'r',1]]){
   const heightFactor=s['e'+side+'H'],closure=heightFactor>.32?Math.min(1,blinkEnvelope(r.eyeClock+(sign>0?.012:0),r.phase)*s.eBlink):0;
   const micro=s.speaking*(speech.energy*.12+speech.beat*.09-speech.ending*.18)+s.eBusy*work.check*.14;
@@ -723,12 +730,12 @@ function drawEyes(r,t,dt,s){
    outline=source.map(([x,y],i)=>{const p=target[(i+offset)%48];return[p[0]+(x*w-p[0])*amount,p[1]+(y*h-p[1])*amount]});
   }
   const angle=s['e'+side+'Tilt']+at.roll;
-  if(s.eIdle>.001)idleEyes.push({eye,at,outline,angle});
+  if(fitFace)fittedEyes.push({eye,at,outline,angle});
   eye.setAttribute('d',smoothPath(outline));
   eye.setAttribute('fill',color);eye.setAttribute('stroke','none');
   eye.setAttribute('transform',`translate(${at.x.toFixed(3)} ${at.y.toFixed(3)}) rotate(${angle.toFixed(3)})`);
  }
- if(s.eIdle>.001)fitIdleFace(r,idleEyes);
+ if(fitFace)fitFaceWithinBody(r,fittedEyes);
 }
 function drawBodyShape(r,t,s){
  let m=r.model,q=t+r.phase,E=s.energy,pulse=s.speaking*speakingGesture(speakElapsed,m).beat,breath=Math.sin(q*1.7),bob=(2+E*3)*Math.sin(q*(.9+s.speaking*1.5)),sway=Math.sin(q*.77)*E;
@@ -813,13 +820,12 @@ function stateButtons(host){
 }
 stateButtons($('#states'));stateButtons($('#detail-states'));
 for(let[i,m]of models.entries()){let card=document.createElement('article');card.className='card';let b=document.createElement('button');b.className='open-card';b.setAttribute('aria-label',`放大查看 ${m.name}`);b.innerHTML=`<div class="stage"><span class="number">${String(i+1).padStart(2,'0')} /</span><span class="expand" aria-hidden="true">↗</span></div><div class="copy"><div class="name-row"><h2>${m.name}</h2><span>${m.en}</span></div><p>${m.short}</p></div>`;renderers.push(createMascot(m,b.querySelector('.stage'),'card-'+i));b.addEventListener('click',()=>openModel(i));card.append(b);$(m.family==='ferro'?'#ferro-family':m.family==='electric'?'#electric-family':'#gallery').append(card);}
-function goal(){return state==='wake'?wakingPose(wakeElapsed):poseForState(state);}
+function goal(){return state==='wake'?wakingPose(wakeElapsed):state==='sleep'?sleepingPose(sleepElapsed):poseForState(state);}
 function setState(next){
  if(next==='sleep'&&state!=='sleep')sleepElapsed=0;
  if(next==='listen'&&state!=='listen')listenElapsed=0;
  if(next==='busy'&&state!=='busy')busyElapsed=0;
  if(next==='speak'&&state!=='speak')speakElapsed=0;
- if(next==='idle'&&state==='sleep')next='wake';
  if(next==='wake'){
   wakeStartPose={...transition};wakeElapsed=paused?.42*WAKE_PACE:0;
  }else{wakeStartPose=null;wakeElapsed=0;}
