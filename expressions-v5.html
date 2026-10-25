@@ -440,6 +440,11 @@ const IDLE_ALIGNMENT=IDLE_OUTLINES.map(outline=>{
 });
 let wakeElapsed=0,wakeStartPose=null,listenElapsed=0,busyElapsed=0,speakElapsed=0,sleepElapsed=0;
 const pointer={x:0,y:0,active:false};
+// Destination-specific durations, with the same cubic ease-in/out as Grok Ball.
+const STATE_TRANSITIONS={sleep:.9,idle:.7,listen:.65,think:.65,busy:.6,speak:.65,
+ happy:.65,curious:.6,surprised:.45,confused:.65,focused:.6,shy:.8,sad:.9,
+ angry:.6,sleepy:1,wink:.55,eager:.65,proud:.7,unimpressed:.75,nervous:.55,relieved:.95};
+let stateBlend=null;
 let transition=poseForState('idle');
 const neutralBodyPose=poseForState('idle');
 function node(tag,attrs={},parent){let n=document.createElementNS(NS,tag);for(let[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(parent)parent.appendChild(n);return n;}
@@ -821,7 +826,17 @@ function stateButtons(host){
 stateButtons($('#states'));stateButtons($('#detail-states'));
 for(let[i,m]of models.entries()){let card=document.createElement('article');card.className='card';let b=document.createElement('button');b.className='open-card';b.setAttribute('aria-label',`放大查看 ${m.name}`);b.innerHTML=`<div class="stage"><span class="number">${String(i+1).padStart(2,'0')} /</span><span class="expand" aria-hidden="true">↗</span></div><div class="copy"><div class="name-row"><h2>${m.name}</h2><span>${m.en}</span></div><p>${m.short}</p></div>`;renderers.push(createMascot(m,b.querySelector('.stage'),'card-'+i));b.addEventListener('click',()=>openModel(i));card.append(b);$(m.family==='ferro'?'#ferro-family':m.family==='electric'?'#electric-family':'#gallery').append(card);}
 function goal(){return state==='wake'?wakingPose(wakeElapsed):state==='sleep'?sleepingPose(sleepElapsed):poseForState(state);}
+function advanceStateTransition(dt){
+ const target=goal();
+ if(!stateBlend){Object.assign(transition,target);return;}
+ stateBlend.elapsed=Math.min(stateBlend.duration,stateBlend.elapsed+Math.max(0,dt));
+ const t=stateBlend.elapsed/stateBlend.duration,k=t<.5?4*t*t*t:1-(-2*t+2)**3/2;
+ for(const key in target)transition[key]=stateBlend.from[key]+(target[key]-stateBlend.from[key])*k;
+ if(t>=1)stateBlend=null;
+}
 function setState(next){
+ if(next==='wake')stateBlend=null;
+ else if(next!==state)stateBlend={from:{...transition},elapsed:0,duration:STATE_TRANSITIONS[next]??.7};
  if(next==='sleep'&&state!=='sleep')sleepElapsed=0;
  if(next==='listen'&&state!=='listen')listenElapsed=0;
  if(next==='busy'&&state!=='busy')busyElapsed=0;
@@ -833,7 +848,7 @@ function setState(next){
  document.querySelectorAll('[data-state]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.state===next));
  $('#state-hint').textContent=s.hint;$('#behavior').textContent=behaviorText(models[selected],s);
  for(const r of [...renderers,...(detailRenderer?[detailRenderer]:[])])r.svg.setAttribute('aria-label',r.model.name+' · '+s.name);
- if(paused){Object.assign(transition,goal());paint(.016);}
+ if(paused){stateBlend=null;Object.assign(transition,goal());paint(.016);}
 }
 function openModel(i){selected=(i+models.length)%models.length;let m=models[selected];$('#detail-number').textContent=String(selected+1).padStart(2,'0')+' / '+m.tag;$('#detail-name').textContent=m.name+' · '+m.en;$('#detail-concept').textContent=m.concept;$('#big-stage').replaceChildren();detailRenderer=createMascot(m,$('#big-stage'),'detail');$('#behavior').textContent=behaviorText(m,states.find(s=>s.id===state));if(!$('#viewer').open)$('#viewer').showModal();updateGazeTargets();paint(.016);}
 function paint(dt){
@@ -853,7 +868,7 @@ function frame(now){
   if(state==='wake'){
    wakeElapsed=Math.min(WAKE_DURATION,wakeElapsed+dt);Object.assign(transition,goal());
   }else{
-   const target=goal();for(const k in target)transition[k]+=(target[k]-transition[k])*Math.min(1,dt*(k.startsWith('e')&&k!=='energy'?11:6));
+   advanceStateTransition(dt);
   }
   paint(dt);
   if(state==='wake'&&wakeElapsed>=WAKE_DURATION)setState('idle');
