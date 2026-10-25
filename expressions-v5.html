@@ -525,7 +525,7 @@ function drawElectric(r,t,s,pulse){
  let tilt=s.tilt*28,bob=Math.sin(t*.8+r.phase)*1.3-s.happy*Math.abs(Math.sin(t*2.1))*3;
  return '';
 }
-function behaviorText(model,s){return deformationEnabled?s.behavior:`当前：${s.name}。身体轮廓与比例保持固定，眼神和整体动作继续变化。`;}
+function behaviorText(model,s){return s.behavior;}
 function poseForState(id){
  const s=states.find(item=>item.id===id)||states.find(item=>item.id==='idle'),e=s.eyes;
  const out={open:1,scale:s.scale,energy:s.energy,tilt:s.tilt,happy:id==='happy'?1:0,asleep:id==='sleep'?1:0,thinking:id==='think'?1:0,speaking:id==='speak'?1:0,listening:id==='listen'?1:0,eGazeX:e.gaze[0],eGazeY:e.gaze[1],eGap:e.gap||1,eBlink:e.blink??1,eIdle:id==='idle'?1:0,eWakeYaw:0,eWakeShape:id==='wake'?1:0,eClassicAngry:id==='angry'?1:0,eNervous:id==='nervous'?1:0,eSleepy:id==='sleepy'?1:0,eBusy:id==='busy'?1:0};
