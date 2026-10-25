@@ -6,7 +6,7 @@
 
 [![团子 18 个形象总览，包含基础形象、磁流体家族与电光家族](assets/preview/collection.png)](https://liz2z.github.io/tuanzi/)
 
-18 个形象，包含基础形象、磁流体家族与电光家族。21 种表情，支持视线跟随、自然眨眼和自动演示；不同形象拥有各自的动作，辅助标志会随身体轮廓让位。
+19 个形象，包含基础形象、磁流体家族与电光家族。22 种表情，支持视线跟随、自然眨眼和自动演示；不同形象拥有各自的动作，辅助标志会随身体轮廓让位。
 
 ## 表情与动作
 
@@ -18,7 +18,7 @@
 
 ![小角、呼吸团子与球电团子的连续表情及动作演示](assets/preview/motion.gif)
 
-本地打开 [expressions-v3.html](expressions-v3.html) 即可预览最新版；[V2](expressions-v2.html) 与[初版眼神设计](index.html) 保留供对比。
+首页为 V5，本地打开 [index.html](index.html) 或 [expressions-v5.html](expressions-v5.html) 即可体验；[V4](expressions-v4.html)、[V3](expressions-v3.html)、[V2](expressions-v2.html) 与[初版眼神设计](expressions-v1.html) 保留供对比。
 
 ## 灵感来源
 
